@@ -4,23 +4,56 @@
 \alias{character.limitation}
 \title{Check if text stays within a character limit (Unicode-safe)}
 \usage{
-character.limitation(text, limitation)
+character.limitation(text, limitation, output = c("json", "logical"))
 }
 \arguments{
-\item{text}{Character vector (can include \code{NA}).}
+\item{text}{Character vector (may include \code{NA}).}
 
-\item{limitation}{Single non-negative number (max character count).}
+\item{limitation}{Single non-negative number (max character count); coerced to integer.}
+
+\item{output}{One of \code{"json"} (default) or \code{"logical"}.}
 }
 \value{
-Integer vector: \code{1L} if within limit, \code{0L} otherwise, and
-\code{NA_integer_} for \code{NA} inputs.
+\itemize{
+\item If \code{output = "logical"}: a logical vector \code{TRUE}/\code{FALSE}/\code{NA} indicating
+whether each element is within the limit.
+\item If \code{output = "json"}: a single JSON string with the shape:
+
+\if{html}{\out{<div class="sourceCode">}}\preformatted{\{
+  "limit": <number>,
+  "results": [
+    \{ "text": <string|null>, "length": <number|null>, "within": <boolean|null> \},
+    ...
+  ]
+\}
+}\if{html}{\out{</div>}}
+
+where R \code{NA} values are encoded as JSON \code{null}.
+}
 }
 \description{
-Vectorised over \code{text}. Returns integer flags and \strong{ignores line breaks}
-when counting characters (so " \code{"a\\nb\\nc"}" with limit 3 passes).
+Vectorised over \code{text}. Counts spaces, but \strong{ignores line breaks} when
+measuring length (e.g., \code{"a\\nb\\nc"} is counted as 3). Useful for validating
+UI copy length while allowing multi-line inputs.
+}
+\details{
+Character counting removes Unicode line separators via \verb{\\\\R}, but leaves all
+other characters (including spaces and tabs). This mirrors typical UI limits
+where newlines don’t consume quota but spaces do.
 }
 \examples{
-character.limitation("hello", 5)   # 1L (at boundary)
-character.limitation("hello", 4)   # 0L
-character.limitation(c("abc", NA, "abcdef"), 5)
+# Logical output (vectorised)
+character.limitation(c("hi", "hello world", NA_character_, ""), 5, output = "logical")
+#> TRUE FALSE NA TRUE
+
+# Newlines are ignored; spaces are counted
+character.limitation("hello\nworld", 10, output = "logical")  # "helloworld" -> 10
+#> TRUE
+character.limitation("a b", 3, output = "logical")            # counts space -> 3
+#> TRUE
+
+# JSON output (default): single JSON string for all inputs
+js <- character.limitation(c("abc", NA, "abcdef"), 5)
+jsonlite::fromJSON(js, simplifyVector = FALSE)
+
 }
