@@ -2,10 +2,10 @@ Package: R.Package
 Title: R Package Template
 Version: 0.0.1.0000
 Authors@R: 
-    person(given = "Flippie",
-           family = "Coetser",
+    person(given = "Aleyna",
+           family = "Coskun",
            role = c("aut", "cre"),
-           email = "Flippie.Coetser@gmail.com",
+           email = "coskunaleyna@gmail.com",
            comment = c(ORCID = "0000-0003-0549-9245"))
 Description: This repository can be used as a boilerplate when creating a new R package.
 License: file LICENSE
