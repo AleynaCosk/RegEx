@@ -19,12 +19,25 @@ character.limitation <- \(text, limitation){
     stop("`limitation` must be a single non-negative number.")
   }
   lim <- as.integer(limitation)
-  if (length(text) == 0L) return(integer(0))
 
-  text |>
-    (\(x) if (!is.character(x)) as.character(x) else x)() |>
-    (\(x) gsub("\\R", "", x, perl = TRUE))() |>
-    nchar(allowNA = TRUE) |>
-    (\(n) n <= lim)() |>
-    as.integer()
+  if (length(text) == 0L) {
+    txt <- NA_character_
+  } else {
+    txt <- as.character(text[[1L]])
+  }
+
+  stripped <- gsub("\\R", "", txt, perl = TRUE)
+  len <- nchar(stripped, allowNA = TRUE)
+  within <- if (!is.na(len)) (len <= lim) else NA
+
+  payload <- list(
+    limit = lim,
+    results = list(list(
+      text   = txt,
+      length = if (!is.na(len)) as.integer(len) else NA_integer_,
+      within = isTRUE(within)   # ensures TRUE/FALSE (not 1/0)
+    ))
+  )
+
+  jsonlite::toJSON(payload, auto_unbox = TRUE, na = "null", null = "null")
 }
